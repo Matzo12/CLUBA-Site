@@ -1,0 +1,19 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cluba-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-27",
+  "observability": { "enabled": true },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cluba_prod",
+      "database_id": "c732db4b-be61-4700-b858-07e90c81a5d5"
+    }
+  ]
+}
