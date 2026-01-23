@@ -1,5 +1,8 @@
 type Env = {
-  WAITLIST_KV: KVNamespace
+  WAITLIST_KV: {
+    get(key: string): Promise<string | null>
+    put(key: string, value: string): Promise<void>
+  }
 }
 
 function isValidEmail(email: string) {
