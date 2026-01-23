@@ -196,7 +196,7 @@ function WaitlistForm({ compact }: { compact?: boolean }) {
     setError('')
 
     try {
-      const res = await fetch('/api/waitlist', {
+      const res = await fetch('/api/waitlist/', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, useCase })
