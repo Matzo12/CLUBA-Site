@@ -1,34 +1,53 @@
-export async function onRequestPost(context: { request: Request; env: any }) {
+type Env = {
+  WAITLIST_KV: KVNamespace
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'content-type': 'application/json' }
+  })
+}
+
+export async function onRequestPost(context: { request: Request; env: Env }) {
   try {
     const body = await context.request.json()
-    const email = String(body?.email || '').trim()
+    const email = String(body?.email || '').trim().toLowerCase()
     const useCase = String(body?.useCase || '').trim()
 
-    const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
     if (!email || !isValidEmail(email)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Please enter a valid email.' }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' }
-      })
+      return json({ ok: false, error: 'Please enter a valid email.' }, 400)
     }
 
-    const payload = {
+    const now = new Date()
+    const ts = now.toISOString()
+
+    const emailKey = `email:${email}`
+    const existing = await context.env.WAITLIST_KV.get(emailKey)
+    if (existing) {
+      return json({ ok: true, deduped: true }, 200)
+    }
+
+    const id = crypto.randomUUID()
+    const record = {
+      id,
       email,
       useCase,
-      ts: new Date().toISOString(),
+      ts,
       ua: context.request.headers.get('user-agent') || ''
     }
 
-    console.log('WAITLIST_SUBMIT', JSON.stringify(payload))
+    await context.env.WAITLIST_KV.put(emailKey, id)
+    await context.env.WAITLIST_KV.put(`signup:${ts}:${id}`, JSON.stringify(record))
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' }
-    })
+    console.log('WAITLIST_SUBMIT', JSON.stringify(record))
+
+    return json({ ok: true }, 200)
   } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'Invalid request.' }), {
-      status: 400,
-      headers: { 'content-type': 'application/json' }
-    })
+    return json({ ok: false, error: 'Invalid request.' }, 400)
   }
 }
