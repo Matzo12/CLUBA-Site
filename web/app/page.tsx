@@ -241,8 +241,10 @@ export default function Page() {
             </h1>
 
             <p className="lead">
-              cluba is a user-controlled memory space for AI: topic “kingdoms” connected by relationships.
-              After each session, the assistant proposes updates. You approve, edit, reject, or purge.
+              Think of Cluba as a map of knowledge made of kingdoms and roads.
+              Each kingdom represents a topic, and roads show how ideas connect.
+              After every conversation, the AI suggests new places or paths to add to the map.
+              Nothing is added unless you allow it — you2019re the ruler of the map.
             </p>
 
             <div id="waitlist" className="heroCard">
