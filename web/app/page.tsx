@@ -6,23 +6,35 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-const AIRPORTS = [
-  'Berlin (BER)',
-  'Frankfurt (FRA)',
+const AIRPORTS_DE = [
+  'Berlin Brandenburg (BER)',
+  'Frankfurt am Main (FRA)',
   'München (MUC)',
   'Hamburg (HAM)',
   'Düsseldorf (DUS)',
   'Köln/Bonn (CGN)',
   'Stuttgart (STR)',
+  'Hannover (HAJ)',
+  'Nürnberg (NUE)',
+  'Leipzig/Halle (LEJ)',
+  'Dresden (DRS)',
+  'Bremen (BRE)',
+  'Dortmund (DTM)',
+  'Karlsruhe/Baden-Baden (FKB)',
+  'Memmingen (FMM)',
+  'Friedrichshafen (FDH)',
 ]
 
 export default function Page() {
   const [email, setEmail] = useState('')
-  const [airport, setAirport] = useState(AIRPORTS[0])
+  const [airport, setAirport] = useState(AIRPORTS_DE[0])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const canSubmit = useMemo(() => isValidEmail(email) && !loading, [email, loading])
+  const canSubmit = useMemo(
+    () => isValidEmail(email) && !loading,
+    [email, loading]
+  )
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -34,8 +46,8 @@ export default function Page() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, airport }),
     })
-
     setLoading(false)
+
     if (res.ok) {
       setSuccess(true)
       setEmail('')
@@ -44,133 +56,158 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-[#f7fbff] text-[#0f172a]">
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_20%_10%,rgba(56,189,248,0.18),transparent_60%),radial-gradient(900px_600px_at_80%_20%,rgba(34,197,94,0.14),transparent_55%),radial-gradient(900px_600px_at_50%_90%,rgba(251,191,36,0.16),transparent_60%)]" />
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(1000px_500px_at_20%_0%,rgba(186,230,253,0.35),transparent_60%),radial-gradient(800px_500px_at_80%_10%,rgba(203,213,225,0.25),transparent_55%)]" />
 
-      <header className="mx-auto max-w-7xl px-6 pt-10 flex items-center justify-between">
+      <header className="mx-auto max-w-6xl px-6 pt-10 flex items-center justify-between">
         <div className="text-lg font-semibold tracking-tight">CLUBA</div>
-        <a href="#newsletter" className="rounded-full bg-white/80 px-4 py-2 text-sm shadow hover:bg-white">
+        <a href="#newsletter" className="text-sm text-[#334155] hover:text-[#0f172a]">
           Newsletter
         </a>
       </header>
 
-      <section className="mx-auto max-w-7xl px-6 pt-24 pb-32 grid gap-16 lg:grid-cols-2 items-center">
+      <section className="mx-auto max-w-6xl px-6 pt-24 pb-28 grid gap-14 lg:grid-cols-2 items-start">
         <div>
           <h1 className="text-4xl sm:text-5xl font-semibold leading-tight">
-            Spontaneous trips,
+            Spontane Kurztrips
             <br />
-            beautifully curated.
+            ab deinem Flughafen
           </h1>
 
-          <p className="mt-6 text-lg text-[#334155] leading-relaxed">
-            CLUBA creates inspiring travel packages — one region at a time.
-            We show you what’s truly worth seeing, knowing, and experiencing
-            during a specific period, so spontaneous trips feel effortless.
+          <p className="mt-6 text-lg leading-relaxed text-[#334155]">
+            CLUBA erstellt kostenlose Urlaubspakete als Inspiration.
+            Wir zeigen dir eine Region genau so, wie sie sich
+            <span className="font-medium text-[#0f172a]"> jetzt </span>
+            lohnt: Sehenswürdigkeiten, Wetter, Events und Wissen —
+            kompakt, ruhig und ohne Recherche-Stress.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-white/80 p-5 shadow-sm">
-              <div className="font-medium">What to see</div>
-              <p className="mt-1 text-sm text-[#475569]">
-                The highlights that actually matter right now.
-              </p>
-            </div>
-            <div className="rounded-3xl bg-white/80 p-5 shadow-sm">
-              <div className="font-medium">What to know</div>
-              <p className="mt-1 text-sm text-[#475569]">
-                Culture, history & context — short and human.
-              </p>
-            </div>
-            <div className="rounded-3xl bg-white/80 p-5 shadow-sm">
-              <div className="font-medium">How to plan</div>
-              <p className="mt-1 text-sm text-[#475569]">
-                Weather-aware ideas, Plan A & Plan B.
-              </p>
-            </div>
-            <div className="rounded-3xl bg-white/80 p-5 shadow-sm">
-              <div className="font-medium">What’s on</div>
-              <p className="mt-1 text-sm text-[#475569]">
-                Events and moments happening now.
-              </p>
-            </div>
-          </div>
-
-          <a
-            href="#newsletter"
-            className="inline-flex mt-10 rounded-2xl bg-[#0f172a] px-6 py-3 text-sm font-semibold text-white hover:bg-[#1e293b]"
-          >
-            Get inspired by email
-          </a>
+          <ul className="mt-8 space-y-3 text-[#334155]">
+            <li>• Nur Reiseideen ab deinem Flughafen</li>
+            <li>• Günstig erreichbare Ziele</li>
+            <li>• Must-Sees, Events & Planung im Zeitraum</li>
+            <li>• Kostenlos & jederzeit abmeldbar</li>
+          </ul>
         </div>
 
-        <div className="relative">
-          <div className="rounded-[2.5rem] overflow-hidden shadow-2xl">
-            <img
-              src="/images/hero-destination.png"
-              alt="Travel inspiration"
-              className="h-[520px] w-full object-cover"
+        <div className="rounded-[2rem] bg-white shadow-xl p-8">
+          <h2 className="text-xl font-semibold">
+            Kostenlose Inspiration bekommen
+          </h2>
+
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            <input
+              type="email"
+              placeholder="E-Mail Adresse"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl border border-[#e2e8f0] px-4 py-3"
             />
+
+            <select
+              value={airport}
+              onChange={(e) => setAirport(e.target.value)}
+              className="w-full rounded-xl border border-[#e2e8f0] px-4 py-3"
+            >
+              {AIRPORTS_DE.map((a) => (
+                <option key={a}>{a}</option>
+              ))}
+            </select>
+
+            <button
+              disabled={!canSubmit}
+              className="w-full rounded-xl bg-[#0f172a] py-3 font-semibold text-white hover:bg-[#1e293b] disabled:opacity-60"
+            >
+              {loading ? 'Wird eingetragen…' : 'Kostenlose Inspiration bekommen'}
+            </button>
+
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              Mit dem Eintragen erklärst du dich einverstanden, dass wir dir passende
+              Newsletter zuschicken. Abmeldung jederzeit möglich.
+            </p>
+
+            {success && (
+              <p className="text-sm text-emerald-600">
+                Danke! Du bist dabei ✈️
+              </p>
+            )}
+          </form>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <h3 className="text-2xl font-semibold mb-10">
+          So funktioniert CLUBA
+        </h3>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="rounded-2xl bg-white p-6 shadow">
+            <div className="font-medium">1. Region auswählen</div>
+            <p className="mt-2 text-sm text-[#475569]">
+              Wir finden günstig erreichbare Reiseziele ab deinem Flughafen.
+            </p>
           </div>
 
-          <div className="absolute -bottom-10 left-8 right-8 rounded-3xl bg-white/90 backdrop-blur p-6 shadow-xl">
-            <div className="text-sm font-medium">This week’s inspiration</div>
-            <div className="mt-1 text-lg font-semibold">
-              Sun, old town & slow afternoons
-            </div>
+          <div className="rounded-2xl bg-white p-6 shadow">
+            <div className="font-medium">2. Paket kuratieren</div>
             <p className="mt-2 text-sm text-[#475569]">
-              One region, perfectly timed — curated for an easy spontaneous escape.
+              Sehenswürdigkeiten, Wetter, Events & Wissen — passend zum Zeitraum.
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow">
+            <div className="font-medium">3. Inspirieren lassen</div>
+            <p className="mt-2 text-sm text-[#475569]">
+              Eine klare Übersicht statt endloser Recherche.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-32 grid gap-10 lg:grid-cols-3">
-        <div className="rounded-3xl overflow-hidden bg-white shadow">
-          <img src="/images/package-example.png" className="h-56 w-full object-cover" />
-          <div className="p-6">
-            <div className="font-medium">One clear package</div>
-            <p className="mt-2 text-sm text-[#475569]">
-              No overload. Just the essentials that make a place feel alive.
+      <section className="mx-auto max-w-6xl px-6 pb-32 grid gap-8 md:grid-cols-3">
+        <div className="rounded-2xl bg-white shadow overflow-hidden">
+          <img src="/images/package-example.png" className="h-40 w-full object-cover" />
+          <div className="p-5">
+            <div className="font-medium">Ein Paket</div>
+            <p className="mt-1 text-sm text-[#475569]">
+              Klar strukturiert & angenehm zu lesen.
             </p>
           </div>
         </div>
 
-        <div className="rounded-3xl overflow-hidden bg-white shadow">
-          <img src="/images/city-context.png" className="h-56 w-full object-cover" />
-          <div className="p-6">
-            <div className="font-medium">Context & culture</div>
-            <p className="mt-2 text-sm text-[#475569]">
-              Understand where you are — not just where you go.
+        <div className="rounded-2xl bg-white shadow overflow-hidden">
+          <img src="/images/city-context.png" className="h-40 w-full object-cover" />
+          <div className="p-5">
+            <div className="font-medium">Mit Kontext</div>
+            <p className="mt-1 text-sm text-[#475569]">
+              Kultur, Geschichte & lokale Besonderheiten.
             </p>
           </div>
         </div>
 
-        <div className="rounded-3xl bg-[#0f172a] text-white p-8 flex flex-col justify-between">
-          <div>
-            <div className="text-lg font-semibold">Why CLUBA?</div>
-            <p className="mt-3 text-sm text-white/80">
-              Because inspiration should feel calm, beautiful, and relevant —
-              not overwhelming.
+        <div className="rounded-2xl bg-white shadow overflow-hidden">
+          <img src="/images/hero-destination.png" className="h-40 w-full object-cover" />
+          <div className="p-5">
+            <div className="font-medium">Zur richtigen Zeit</div>
+            <p className="mt-1 text-sm text-[#475569]">
+              Nur das, was sich im Zeitraum lohnt.
             </p>
           </div>
-          <p className="text-sm text-white/60">
-            Free newsletter · unsubscribe anytime
-          </p>
         </div>
       </section>
 
       <section id="newsletter" className="mx-auto max-w-4xl px-6 pb-40">
-        <div className="rounded-[2.5rem] bg-white p-10 shadow-xl">
+        <div className="rounded-[2rem] bg-white p-10 shadow-xl">
           <h2 className="text-2xl font-semibold">
-            Receive spontaneous travel inspiration
+            Kostenlose Inspiration bekommen
           </h2>
           <p className="mt-2 text-[#475569]">
-            Only destinations relevant to your nearby airport.
+            Spontane Reiseideen — passend zu deinem Flughafen.
           </p>
 
-          <form onSubmit={submit} className="mt-8 space-y-4">
+          <form onSubmit={submit} className="mt-6 space-y-4">
             <input
               type="email"
-              placeholder="Email address"
+              placeholder="E-Mail Adresse"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-xl border px-4 py-3"
@@ -181,29 +218,23 @@ export default function Page() {
               onChange={(e) => setAirport(e.target.value)}
               className="w-full rounded-xl border px-4 py-3"
             >
-              {AIRPORTS.map((a) => (
+              {AIRPORTS_DE.map((a) => (
                 <option key={a}>{a}</option>
               ))}
             </select>
 
             <button
               disabled={!canSubmit}
-              className="w-full rounded-xl bg-[#0f172a] py-3 font-semibold text-white hover:bg-[#1e293b] disabled:opacity-60"
+              className="w-full rounded-xl bg-[#0f172a] py-3 font-semibold text-white hover:bg-[#1e293b]"
             >
-              {loading ? 'Signing up…' : 'Join newsletter'}
+              {loading ? 'Wird eingetragen…' : 'Kostenlose Inspiration bekommen'}
             </button>
-
-            {success && (
-              <div className="text-sm text-emerald-600">
-                You’re on the list ✈️
-              </div>
-            )}
           </form>
         </div>
       </section>
 
       <footer className="pb-12 text-center text-xs text-[#64748b]">
-        © {new Date().getFullYear()} CLUBA — spontaneous travel inspiration
+        © {new Date().getFullYear()} CLUBA · Impressum · Datenschutz
       </footer>
     </main>
   )
