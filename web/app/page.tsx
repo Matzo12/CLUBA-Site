@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 type WaitlistResult =
   | { ok: true; deduped?: boolean }
@@ -10,351 +10,298 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-export default function HomePage() {
+const AIRPORTS_DE = [
+  { code: 'BER', name: 'Berlin Brandenburg (BER)' },
+  { code: 'FRA', name: 'Frankfurt am Main (FRA)' },
+  { code: 'MUC', name: 'München (MUC)' },
+  { code: 'HAM', name: 'Hamburg (HAM)' },
+  { code: 'DUS', name: 'Düsseldorf (DUS)' },
+  { code: 'CGN', name: 'Köln/Bonn (CGN)' },
+  { code: 'STR', name: 'Stuttgart (STR)' },
+  { code: 'HAJ', name: 'Hannover (HAJ)' },
+  { code: 'NUE', name: 'Nürnberg (NUE)' },
+  { code: 'LEJ', name: 'Leipzig/Halle (LEJ)' },
+  { code: 'DRS', name: 'Dresden (DRS)' },
+  { code: 'BRE', name: 'Bremen (BRE)' },
+  { code: 'DTM', name: 'Dortmund (DTM)' },
+  { code: 'FKB', name: 'Karlsruhe/Baden-Baden (FKB)' },
+  { code: 'FMM', name: 'Memmingen (FMM)' },
+  { code: 'FDH', name: 'Friedrichshafen (FDH)' },
+].sort((a, b) => a.name.localeCompare(b.name, 'de'))
+
+async function joinWaitlist(email: string, airport: string): Promise<WaitlistResult> {
+  try {
+    const res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, airport }),
+    })
+
+    if (res.ok) {
+      // Optional: Backend kann z.B. { deduped: true } zurückgeben
+      const data = await res.json().catch(() => ({}))
+      return { ok: true, deduped: Boolean((data as any)?.deduped) }
+    }
+
+    const data = await res.json().catch(() => null)
+    const message =
+      (data && (data as any).error) ||
+      `Das hat leider nicht geklappt (Status ${res.status}). Bitte versuche es erneut.`
+    return { ok: false, error: message }
+  } catch {
+    return { ok: false, error: 'Netzwerkfehler. Bitte prüfe deine Verbindung und versuche es erneut.' }
+  }
+}
+
+export default function Page() {
   const [email, setEmail] = useState('')
-  const [note, setNote] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [message, setMessage] = useState('')
+  const [airport, setAirport] = useState<string>(AIRPORTS_DE[0]?.code ?? 'FRA')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<WaitlistResult | null>(null)
+
+  const canSubmit = useMemo(() => {
+    return isValidEmail(email.trim()) && Boolean(airport) && !loading
+  }, [email, airport, loading])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const trimmed = email.trim().toLowerCase()
+    setResult(null)
 
-    if (!trimmed || !isValidEmail(trimmed)) {
-      setStatus('error')
-      setMessage('Please enter a valid email address.')
+    const trimmed = email.trim()
+    if (!isValidEmail(trimmed)) {
+      setResult({ ok: false, error: 'Bitte gib eine gültige E-Mail Adresse ein.' })
       return
     }
 
-    setStatus('loading')
-    setMessage('')
+    setLoading(true)
+    const r = await joinWaitlist(trimmed, airport)
+    setResult(r)
+    setLoading(false)
 
-    try {
-      const res = await fetch('/api/waitlist/', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email: trimmed,
-          useCase: note.trim()
-        })
-      })
-
-      const data = (await res.json()) as WaitlistResult
-
-      if (!data.ok) {
-        setStatus('error')
-        setMessage(data.error || 'Something went wrong. Please try again.')
-        return
-      }
-
-      setStatus('success')
-      setMessage(data.deduped ? 'You’re already on the list.' : 'You’re on the list. Thank you.')
+    if (r.ok && !r.deduped) {
       setEmail('')
-      setNote('')
-    } catch {
-      setStatus('error')
-      setMessage('Network error. Please try again.')
     }
   }
 
   return (
-    <main className="page">
-      <div className="topGlow" aria-hidden="true" />
-      <section className="hero">
-        <div className="container">
-          <div className="heroInner">
-            <div className="pillRow">
-              <span className="pill">Exploration</span>
-              <span className="pill">User-controlled AI memory</span>
-              <span className="pill">EU privacy-first</span>
+    <main className="min-h-screen bg-white text-zinc-900">
+      {/* Top gradient / subtle texture */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_10%,rgba(24,24,27,0.06),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(59,130,246,0.08),transparent_55%),radial-gradient(800px_600px_at_50%_90%,rgba(16,185,129,0.06),transparent_60%)]" />
+      </div>
+
+      <header className="mx-auto max-w-6xl px-6 pt-10 pb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-zinc-900 text-white grid place-items-center font-semibold">
+              C
+            </div>
+            <div className="leading-tight">
+              <div className="font-semibold tracking-tight">CLUBA</div>
+              <div className="text-xs text-zinc-600">Spontane Reisepakete als Inspiration</div>
+            </div>
+          </div>
+          <a
+            href="#waitlist"
+            className="hidden sm:inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/70 px-4 py-2 text-sm font-medium shadow-sm hover:bg-white"
+          >
+            Newsletter holen
+            <span aria-hidden>→</span>
+          </a>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 pb-12">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+          {/* Left: Hero copy */}
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/70 px-3 py-1 text-xs text-zinc-700 shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Kostenloser Newsletter • Flughafen-lokal • Kein Spam
             </div>
 
-            <h1 className="h1">How should AI remember?</h1>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
+              Dein nächstes Abenteuer —{' '}
+              <span className="text-zinc-950">spontan, günstig, perfekt für deinen Flughafen.</span>
+            </h1>
 
-            <p className="lead">
-              As AI systems become part of everyday life, an important question remains unclear:
-              <span className="leadStrong"> who controls what AI remembers — and for how long?</span>
+            <p className="mt-5 text-lg text-zinc-700 leading-relaxed">
+              CLUBA findet günstige <span className="font-medium text-zinc-900">Hin- und Rückflüge</span> ab deinem
+              nächstgelegenen Flughafen und baut daraus ein komplettes Kurztrip-Paket: Highlights, aktuellem Wetter,
+              Kultur & Geschichte, Events im Zeitraum und Ideen für Erkundungen — alles kompakt in einem Newsletter.
             </p>
 
-            <div className="ctaGrid">
-              <div className="ctaCard">
-                <div className="ctaTitle">Follow the exploration</div>
-                <div className="ctaSub">
-                  Leave your email. Add an optional note about why this matters to you.
-                  No commitments. No product promises.
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-200 bg-white/70 p-4 shadow-sm">
+                <div className="text-sm font-semibold">1) Flug-Deal finden</div>
+                <div className="mt-1 text-sm text-zinc-600">
+                  Wir suchen günstige Roundtrips ab deinem Flughafen.
                 </div>
-
-                <form className="form" onSubmit={onSubmit}>
-                  <label className="label" htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    className="input"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-
-                  <label className="label" htmlFor="note">Optional note</label>
-                  <textarea
-                    id="note"
-                    className="textarea"
-                    placeholder="e.g. AI memory feels implicit today; I want transparency and control."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    rows={3}
-                  />
-
-                  <div className="formRow">
-                    <button className="button" type="submit" disabled={status === 'loading'}>
-                      {status === 'loading' ? 'Submitting…' : 'Stay informed'}
-                    </button>
-                    <div className="hint">No spam. Only key updates.</div>
-                  </div>
-
-                  <div className="status" aria-live="polite">
-                    {status === 'success' ? <span className="ok">{message}</span> : null}
-                    {status === 'error' ? <span className="err">{message}</span> : null}
-                  </div>
-                </form>
               </div>
-
-              <div className="sideCard">
-                <div className="sideTitle">What we’re testing</div>
-                <ul className="bullets">
-                  <li>Does the problem resonate: implicit AI memory without clear control?</li>
-                  <li>Would people want visibility into what is remembered and why?</li>
-                  <li>Should forgetting be deliberate, respected, and reversible?</li>
-                </ul>
-                <div className="sideMeta">
-                  If this question matters to you, your feedback helps define the direction.
+              <div className="rounded-2xl border border-zinc-200 bg-white/70 p-4 shadow-sm">
+                <div className="text-sm font-semibold">2) Trip-Paket bauen</div>
+                <div className="mt-1 text-sm text-zinc-600">
+                  Sehenswürdigkeiten, Wetter, Events, Kulinarik & Routen.
+                </div>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 bg-white/70 p-4 shadow-sm">
+                <div className="text-sm font-semibold">3) Nur relevant für dich</div>
+                <div className="mt-1 text-sm text-zinc-600">
+                  Du bekommst nur Newsletter, die zu deinem Flughafen passen.
+                </div>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 bg-white/70 p-4 shadow-sm">
+                <div className="text-sm font-semibold">4) Kostenlos & schnell</div>
+                <div className="mt-1 text-sm text-zinc-600">
+                  Inspiration in Minuten — ideal für spontane Wochenenden.
                 </div>
               </div>
             </div>
 
-            <div className="divider" />
-            <p className="smallIntro">
-              Today, memory in AI systems is often implicit. Information can persist, change, or influence outcomes
-              without being easy to see, verify, or undo. This project explores whether AI memory can be approached differently.
+            <div className="mt-7 flex flex-wrap items-center gap-3 text-sm text-zinc-600">
+              <div className="inline-flex items-center gap-2">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-400" />
+                Keine App nötig
+              </div>
+              <div className="inline-flex items-center gap-2">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-400" />
+                Jederzeit abmelden
+              </div>
+              <div className="inline-flex items-center gap-2">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-400" />
+                Flughafen-basierte Inhalte
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Waitlist card */}
+          <div id="waitlist" className="lg:justify-self-end">
+            <div className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl">
+              <div className="absolute inset-0 bg-[radial-gradient(500px_240px_at_20%_0%,rgba(59,130,246,0.10),transparent_60%),radial-gradient(500px_260px_at_80%_20%,rgba(16,185,129,0.10),transparent_55%)]" />
+              <div className="relative p-6 sm:p-8">
+                <h2 className="text-2xl font-semibold tracking-tight">Newsletter-Waitlist</h2>
+                <p className="mt-2 text-sm text-zinc-700 leading-relaxed">
+                  Trag dich ein und erhalte spontane Reisepakete, die <span className="font-medium">zu deinem Flughafen</span>{' '}
+                  passen.
+                </p>
+
+                <form onSubmit={onSubmit} className="mt-5 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">E-Mail</label>
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="du@beispiel.de"
+                      className="mt-1 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-zinc-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">Abflughafen</label>
+                    <select
+                      value={airport}
+                      onChange={(e) => setAirport(e.target.value)}
+                      className="mt-1 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-zinc-400"
+                    >
+                      {AIRPORTS_DE.map((a) => (
+                        <option key={a.code} value={a.code}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-xs text-zinc-600 leading-relaxed">
+                      Wir senden dir nur Newsletter, die sich auf deinen ausgewählten Flughafen beziehen.
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!canSubmit}
+                    className="w-full rounded-2xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? 'Wird eingetragen…' : 'Kostenlos eintragen'}
+                  </button>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Mit dem Eintragen erklärst du dich damit einverstanden, dass wir dir entsprechend Newsletter zuschicken.
+                    Du kannst dich jederzeit abmelden.
+                  </p>
+
+                  {result?.ok ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                      {result.deduped
+                        ? 'Du bist bereits auf der Liste — danke!'
+                        : 'Geschafft! Du bist auf der Waitlist. ✈️'}
+                    </div>
+                  ) : result ? (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+                      {result.error}
+                    </div>
+                  ) : null}
+                </form>
+
+                <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-200 bg-white/70 p-4">
+                  <div className="text-sm font-semibold">Was du bekommst</div>
+                  <ul className="list-disc pl-5 text-sm text-zinc-700 space-y-1">
+                    <li>Günstige Flug-Inspirationen (Hin & Rück)</li>
+                    <li>Sehenswürdigkeiten & Must-Dos im Zeitraum</li>
+                    <li>Aktuelles Wetter & beste Tagesplanung</li>
+                    <li>Events, Kultur, Geschichte & lokale Tipps</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-4 text-xs text-zinc-500">
+              Hinweis: Inhalte sind Inspiration und können sich je nach Verfügbarkeit/Preis kurzfristig ändern.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="section alt">
-        <div className="container">
-          <h2 className="h2">Memory is more than storage</h2>
-          <p className="p">
-            Understanding depends on context: when something happened, in which situation, and why it mattered.
-            Without context, information becomes brittle or misleading.
+      <section className="mx-auto max-w-6xl px-6 pb-14">
+        <div className="rounded-3xl border border-zinc-200 bg-white/70 p-6 sm:p-8 shadow-sm">
+          <h3 className="text-xl font-semibold tracking-tight">So sieht ein CLUBA-Paket aus</h3>
+          <p className="mt-2 text-sm text-zinc-700">
+            Ein Deal + ein Plan. Statt endlos zu recherchieren, bekommst du eine klare Route mit Highlights, Timing und Kontext.
           </p>
-          <p className="p">
-            This exploration treats memory as contextual and revisable, not as a growing archive of facts.
-          </p>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+              <div className="text-sm font-semibold">Deal-Snapshot</div>
+              <p className="mt-2 text-sm text-zinc-600">
+                Zeitraum, Flugpreise, sinnvolle Abflugzeiten — schnell erfassbar.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+              <div className="text-sm font-semibold">3-Tage-Plan</div>
+              <p className="mt-2 text-sm text-zinc-600">
+                Sehenswürdigkeiten, Viertel, Spots, Ausblicke — mit logischer Reihenfolge.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+              <div className="text-sm font-semibold">Kontext & Events</div>
+              <p className="mt-2 text-sm text-zinc-600">
+                Wetter, Kultur, Geschichte, aktuelle Events — damit du mehr erlebst.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="section">
-        <div className="container">
-          <h2 className="h2">Control is essential</h2>
-          <p className="p">
-            People should always know what is remembered, why it is remembered, and how to remove it.
-          </p>
-          <p className="p">
-            Nothing should be stored without awareness or consent. Forgetting should be deliberate and respected.
-          </p>
-        </div>
-      </section>
-
-      <section className="section alt">
-        <div className="container">
-          <h2 className="h2">Privacy by principle</h2>
-          <p className="p">
-            This work is guided by European data protection values: minimal data, clear purpose, intentional retention,
-            and meaningful deletion.
-          </p>
-          <p className="p">
-            Privacy is structural, not optional.
-          </p>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container">
-          <h2 className="h2">An open question</h2>
-          <p className="p">This is not a product promise. It is an exploration.</p>
-          <p className="p">
-            As AI systems mature, memory may become the most important interface between humans and machines.
-            This page exists to ask whether that problem resonates with you.
-          </p>
-        </div>
-      </section>
-
-      <footer className="footer">
-        <div className="container footerInner">
-          <div className="footerText">ChatGPT can make mistakes. Check important information.</div>
+      <footer className="mx-auto max-w-6xl px-6 pb-10 text-xs text-zinc-500">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>© {new Date().getFullYear()} CLUBA</div>
+          <div className="flex gap-4">
+            <a className="hover:text-zinc-700" href="#waitlist">Newsletter</a>
+            <span className="text-zinc-300">•</span>
+            <span>Made for spontaneous trips</span>
+          </div>
         </div>
       </footer>
-
-      <style jsx global>{`
-        :root{
-          --bg:#ffffff;
-          --text:#111111;
-          --muted:rgba(17,17,17,.68);
-          --line:rgba(17,17,17,.10);
-          --soft:rgba(17,17,17,.04);
-          --alt:#fafafa;
-          --shadow: 0 14px 40px rgba(0,0,0,.08);
-          --radius:18px;
-          --radius2:22px;
-          --accent:#111111;
-        }
-        *{box-sizing:border-box;}
-        html,body{height:100%;}
-        body{
-          margin:0;
-          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-          color:var(--text);
-          background:var(--bg);
-          letter-spacing:-0.01em;
-        }
-        .page{min-height:100vh; position:relative; overflow:hidden;}
-        .topGlow{
-          position:absolute;
-          top:-220px;
-          left:50%;
-          transform:translateX(-50%);
-          width:900px;
-          height:500px;
-          background: radial-gradient(circle at 50% 50%, rgba(0,0,0,.06), rgba(0,0,0,0) 60%);
-          pointer-events:none;
-          filter: blur(0px);
-        }
-        .container{width:min(980px, calc(100% - 40px)); margin:0 auto;}
-        .hero{padding:84px 0 48px;}
-        .heroInner{max-width:900px;}
-        .pillRow{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
-        .pill{
-          font-size:12px;
-          color:rgba(17,17,17,.72);
-          padding:8px 10px;
-          border-radius:999px;
-          border:1px solid var(--line);
-          background:rgba(255,255,255,.85);
-        }
-        .h1{
-          margin:0;
-          font-size: clamp(34px, 4.1vw, 54px);
-          line-height:1.05;
-          letter-spacing:-0.04em;
-          font-weight:650;
-        }
-        .lead{
-          margin:14px 0 0;
-          font-size:18px;
-          line-height:1.6;
-          color:var(--muted);
-          max-width:72ch;
-        }
-        .leadStrong{color:rgba(17,17,17,.86); font-weight:560;}
-        .ctaGrid{
-          margin-top:26px;
-          display:grid;
-          grid-template-columns: 1.15fr .85fr;
-          gap:14px;
-          align-items:start;
-        }
-        @media (max-width: 980px){
-          .ctaGrid{grid-template-columns:1fr;}
-        }
-        .ctaCard{
-          border:1px solid var(--line);
-          border-radius:var(--radius2);
-          background:rgba(255,255,255,.92);
-          box-shadow:var(--shadow);
-          padding:18px;
-        }
-        .ctaTitle{font-weight:700; letter-spacing:-0.02em; font-size:16px;}
-        .ctaSub{margin-top:6px; color:var(--muted); line-height:1.55; font-size:13.5px;}
-        .form{margin-top:14px; display:grid; gap:10px;}
-        .label{font-size:12.5px; color:rgba(17,17,17,.62);}
-        .input{
-          width:100%;
-          padding:12px 12px;
-          border-radius:14px;
-          border:1px solid var(--line);
-          background:#fff;
-          outline:none;
-          font-size:14.5px;
-        }
-        .textarea{
-          width:100%;
-          padding:12px 12px;
-          border-radius:14px;
-          border:1px solid var(--line);
-          background:#fff;
-          outline:none;
-          font-size:14.5px;
-          resize:vertical;
-          min-height:88px;
-        }
-        .input:focus, .textarea:focus{
-          border-color: rgba(17,17,17,.26);
-          box-shadow: 0 0 0 4px rgba(17,17,17,.08);
-        }
-        .formRow{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:2px;}
-        .button{
-          padding:11px 14px;
-          border-radius:14px;
-          border:1px solid rgba(17,17,17,.22);
-          background: var(--accent);
-          color:#fff;
-          font-weight:700;
-          cursor:pointer;
-        }
-        .button:disabled{opacity:.75; cursor:not-allowed;}
-        .hint{font-size:12.5px; color:rgba(17,17,17,.55);}
-        .status{min-height:18px; font-size:13px;}
-        .ok{color:rgba(8,120,70,.95);}
-        .err{color:rgba(190,65,65,.95);}
-        .sideCard{
-          border:1px solid var(--line);
-          border-radius:var(--radius2);
-          background:rgba(255,255,255,.78);
-          padding:18px;
-        }
-        .sideTitle{font-weight:700; letter-spacing:-0.02em; font-size:15px;}
-        .bullets{
-          margin:10px 0 0;
-          padding-left:18px;
-          color:rgba(17,17,17,.72);
-          line-height:1.6;
-          font-size:13.5px;
-        }
-        .sideMeta{margin-top:12px; color:rgba(17,17,17,.55); font-size:12.5px; line-height:1.55;}
-        .divider{
-          margin:32px 0 18px;
-          height:1px;
-          background: var(--line);
-        }
-        .smallIntro{
-          margin:0;
-          color:rgba(17,17,17,.62);
-          font-size:13.5px;
-          line-height:1.65;
-          max-width:86ch;
-        }
-        .section{padding:56px 0;}
-        .alt{background:var(--alt); border-top:1px solid rgba(17,17,17,.06); border-bottom:1px solid rgba(17,17,17,.06);}
-        .h2{margin:0; font-size:24px; letter-spacing:-0.02em; font-weight:650;}
-        .p{margin:12px 0 0; color:rgba(17,17,17,.72); font-size:15.5px; line-height:1.75; max-width:78ch;}
-        .footer{border-top:1px solid var(--line); padding:26px 0 38px;}
-        .footerInner{display:flex; justify-content:center;}
-        .footerText{font-size:12.5px; color:rgba(17,17,17,.55);}
-      `}</style>
     </main>
   )
 }
