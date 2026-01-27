@@ -14,3 +14,7 @@ body {
 * {
   box-sizing: border-box;
 }
+
+::selection {
+  background: rgba(56, 189, 248, 0.25);
+}
