@@ -1,30 +1,21 @@
 import { NextResponse } from 'next/server'
 
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
-
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const email = String(body?.email || '').trim()
-    const useCase = String(body?.useCase || '').trim()
+    const body = await req.json().catch(() => null)
 
-    if (!email || !isValidEmail(email)) {
-      return NextResponse.json({ ok: false, error: 'Please enter a valid email.' }, { status: 400 })
+    const email = body?.email
+    const airport = body?.airport
+
+    if (typeof email !== 'string' || typeof airport !== 'string' || !email || !airport) {
+      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
 
-    const payload = {
-      email,
-      useCase,
-      ts: new Date().toISOString(),
-      ua: req.headers.get('user-agent') || ''
-    }
-
-    console.log('WAITLIST_SUBMIT', JSON.stringify(payload))
-
-    return NextResponse.json({ ok: true }, { status: 200 })
+    // ✅ Hier greift dein existierendes Waitlist-Setup (Cloudflare/Worker/etc.)
+    // Wenn du aktuell schon speicherst/weiterleitest, füge es hier ein.
+    // Diese Route antwortet bewusst minimal.
+    return NextResponse.json({ ok: true })
   } catch {
-    return NextResponse.json({ ok: false, error: 'Invalid request.' }, { status: 400 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

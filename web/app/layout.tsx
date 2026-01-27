@@ -1,26 +1,15 @@
 import './globals.css'
+import type { Metadata } from 'next'
 
-export const metadata = {
-  title: 'cluba — Private AI Memory You Control',
-  description: 'A privacy-first memory layer for AI. See what gets remembered. Approve every change. Delete anything, anytime.',
-  metadataBase: new URL('https://cluba.com'),
-  openGraph: {
-    title: 'cluba — Private AI Memory You Control',
-    description: 'A privacy-first memory layer for AI. See what gets remembered. Approve every change. Delete anything, anytime.',
-    url: 'https://cluba.com',
-    siteName: 'cluba',
-    type: 'website'
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'cluba — Private AI Memory You Control',
-    description: 'A privacy-first memory layer for AI. See what gets remembered. Approve every change. Delete anything, anytime.'
-  }
+export const metadata: Metadata = {
+  title: 'CLUBA — Spontane Reiseinspirationen',
+  description:
+    'Kostenlose Urlaubspakete als Inspiration. Eine Region, ein Zeitraum, alles was sich lohnt.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="de">
       <body>{children}</body>
     </html>
   )

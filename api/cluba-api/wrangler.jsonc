@@ -1,13 +1,23 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cluba-api",
+  "name":"cluba-api",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [ { "pattern": "api.cluba.com/*", "zone_name": "cluba.com" } ],
   "main": "src/index.ts",
   "compatibility_date": "2025-09-27",
+
+  "workers_dev": false,
+  "preview_urls": false,
+
   "observability": { "enabled": true },
+
+  "vars": {
+    "STARTER_LOOKUP_KEY": "cluba_starter_monthly",
+    "TOPUP_SMALL_LOOKUP_KEY": "memory_points_small",
+    "TOPUP_MED_LOOKUP_KEY": "memory_points_medium",
+    "TOPUP_LARGE_LOOKUP_KEY": "memory_points_large"
+  },
 
   "d1_databases": [
     {
@@ -17,3 +27,4 @@
     }
   ]
 }
+
